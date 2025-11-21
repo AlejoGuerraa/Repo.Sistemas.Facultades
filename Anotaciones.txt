@@ -1,0 +1,17 @@
+
+
+MODELOS: 
+    Alumnos ()
+    Alumnos_Conejos ()
+    Conejos ()
+    
+    Profesores ()
+    Profesores_Materias ()
+
+    Materias ()
+    Carreras ()
+    Facultades ()
+
+    Notas_Examenes ()
+    Notas_Materias ()
+
