@@ -1,0 +1,46 @@
+/* Contenedor general del contenido principal */
+.principal-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f3f4f6; /* gris suave */
+}
+
+/* Contenedor del main */
+.principal-main {
+  flex-grow: 1;
+  padding: 24px;
+  color: #333;
+}
+
+/* Títulos */
+.principal-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 24px;
+}
+
+.principal-subtitle {
+  margin-bottom: 32px;
+  font-size: 1rem;
+}
+
+/* Contenedor de las cards */
+.card-grid {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 32px;
+  flex-wrap: wrap; /* se acomodan en pantallas chicas */
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .principal-main {
+    padding: 16px;
+  }
+
+  .card-grid {
+    gap: 20px;
+  }
+}

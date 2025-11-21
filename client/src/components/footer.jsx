@@ -16,9 +16,9 @@
                     {/* 1. SECCIÓN CONTACTO (IZQUIERDA) */}
                     <div className="footer-section contact"> 
                         <h4>Contacto</h4>
-                        <p>Email: <a href="mailto:nextRead@gmail.com">nextRead@gmail.com</a></p>
-                        <p>Teléfono: 123 345 567</p>
-                        <p>Direccion: si</p>
+                        <p>Email: <a href="mailto:nextRead@gmail.com">sistemaUniv@gmail.com</a></p>
+                        <p>Teléfono: +54 9 11 3432 1238</p>
+                        
                     </div>
 
                     {/* 2. SECCIÓN ENLACES (CENTRO) */}

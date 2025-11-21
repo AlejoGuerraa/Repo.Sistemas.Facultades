@@ -1,17 +1,19 @@
 
+Ingresar ALUMNO",
+Ingresar PROFESOR",
 
-MODELOS: 
-    Alumnos ()
-    Alumnos_Conejos ()
-    Conejos ()
-    
-    Profesores ()
-    Profesores_Materias ()
+Editar ALUMNO",
+Editar PROFESOR"
 
-    Materias ()
-    Carreras ()
-    Facultades ()
+Buscar ALUMNO por apellido / nombre / teléfono",
+Buscar PROFESOR por apellido / nombre",
+Mostrar ALUMNOS por FACULTAD
+Mostrar ALUMNOS por CARRERA
+Mostrar ALUMNOS por MATERIA
+Listar MATERIAS por CARRERA
+Resumen de tablas (conteos)
+Mostrar TABLA completa limitada
 
-    Notas_Examenes ()
-    Notas_Materias ()
-
+🧠  Brain Hunter   
+😎  Easy Mode   
+👻  Ghost Hunter         
