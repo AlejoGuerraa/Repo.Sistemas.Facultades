@@ -1,3 +1,4 @@
+/* Header.css */
 .header-container {
   display: flex;
   justify-content: space-between;
@@ -18,30 +19,37 @@
   gap: 20px;
 }
 
-/* Título principal */
+/* Fuente elegante */
 .app-title {
-  font-family: "Poppins", sans-serif;
+  font-family: "Cormorant Garamond", serif;
   font-weight: 700;
-  font-size: 32px;
-  color: #dde6ecff;
+  font-size: 36px;
+  color: #dde6ec;
   cursor: pointer;
   text-shadow: 0 2px 6px rgba(0,0,0,0.4);
-}
-
-.search-wrapper {
-  margin-left: 24px;
-  width: 320px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
+  gap: 22px;
+}
+
+/* Iconos */
+.icon {
+  width: 32px;
+  height: 32px;
+  color: #e8f0f7;
+  cursor: pointer;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.icon:hover {
+  transform: scale(1.25);
+  color: #ffffff;
 }
 
 @media (max-width: 600px) {
-  .search-wrapper {
-    display: none;
-  }
   .header-container {
     padding: 12px 18px;
   }
