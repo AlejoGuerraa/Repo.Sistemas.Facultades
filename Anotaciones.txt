@@ -17,3 +17,134 @@ Mostrar TABLA completa limitada
 🧠  Brain Hunter   
 😎  Easy Mode   
 👻  Ghost Hunter         
+Mostrar notas de un alumno
+
+
+
+
+---------------------
+
+necesito que me generes un archivo peticionesAlumno.js que va a ser el que albergue los endpoints de mi pagina, estos son los endpoints que necesito:
+
+Buscar alumno por nombre/apellido/dni
+Ingresar alumno
+Editar Alumno
+Ingresar profesor
+editar profesor
+listar materias segun carrera
+
+La pagina va a consistir en una tabla tipo excel, donde vos puedas en base a un buscador, encontrar un alumno. Y van a existir
+dropdowns donde el usuario va a poder elegir filtros, que van a ser (facultad(unsam,uba y utn), carrera(economia, contador publico,medicina y ing. en sistemas), materia(son una banda), y los va a poder ordenar por (edad )
+
+Entonces, necesito que me hagas los endpoints que se necesiten para todas esas peticiones. Aca te paso todos mis modelos para que sepas que atributos uso.
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const alumnos = sequelize.define(
+    "alumnos",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+
+      nombre: { type: DataTypes.STRING(100), allowNull: false },
+      apellido: { type: DataTypes.STRING(100), allowNull: false },
+
+      telefono: { type: DataTypes.BIGINT, allowNull: false, unique: true },
+      direccion: { type: DataTypes.STRING(255), allowNull: false, unique: true },
+      dni: { type: DataTypes.STRING(15), allowNull: false, unique: true },
+
+      edad: { type: DataTypes.INTEGER, allowNull: false },
+      nacionalidad: { type: DataTypes.STRING(50), allowNull: false },
+
+      id_facultad: { type: DataTypes.INTEGER, allowNull: false },
+      id_carrera: { type: DataTypes.INTEGER, allowNull: false },
+    },
+    {
+      tableName: "alumnos",
+      timestamps: false,
+    }
+  );
+
+  return alumnos;
+};
+
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const profesores = sequelize.define(
+    "profesores",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+
+      nombre: { type: DataTypes.STRING(100), allowNull: false },
+      apellido: { type: DataTypes.STRING(100), allowNull: false },
+
+      titulo: { type: DataTypes.STRING(255), allowNull: true },
+
+      id_facultad: { type: DataTypes.INTEGER, allowNull: true },
+    },
+    {
+      tableName: "profesores",
+      timestamps: false,
+    }
+  );
+
+  return profesores;
+};
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const facultades = sequelize.define(
+    "facultades",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+      nombre: { type: DataTypes.STRING(200), allowNull: false },
+    },
+    {
+      tableName: "facultades",
+      timestamps: false,
+    }
+  );
+
+  return facultades;
+};
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const materias = sequelize.define(
+    "materias",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+
+      nombre: { type: DataTypes.STRING(255), allowNull: false },
+      anio: { type: DataTypes.INTEGER, allowNull: false },
+
+      id_carrera: { type: DataTypes.INTEGER, allowNull: false },
+    },
+    {
+      tableName: "materias",
+      timestamps: false,
+    }
+  );
+
+  return materias;
+};
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const Carrera = sequelize.define(
+    "carreras",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+      nombre: { type: DataTypes.STRING(200), allowNull: false },
+      id_facultad: { type: DataTypes.INTEGER },
+    },
+    {
+      tableName: "carreras",
+      timestamps: false,
+    }
+  );
+
+  return carreras;
+};

@@ -18,8 +18,6 @@ module.exports = (sequelize) => {
 
       id_facultad: { type: DataTypes.INTEGER, allowNull: false },
       id_carrera: { type: DataTypes.INTEGER, allowNull: false },
-
-      conejos: { type: DataTypes.JSON },
     },
     {
       tableName: "alumnos",
@@ -29,3 +27,5 @@ module.exports = (sequelize) => {
 
   return alumnos;
 };
+
+
