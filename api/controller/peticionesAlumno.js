@@ -1,15 +1,18 @@
 // peticionesAlumno.js
-const alumnos = require("../models/alumnos");
-const profesores = require("../models/profesores");
-const materias = require("../models/materias");
 
+const { Op } = require("sequelize");
+const { alumnos, carreras, facultades, materias, profesores, conejos, alumnos_conejos, notas_materias, notas_examenes } = require("../models");
 
 const buscarAlumno = async (req, res) => {
   const { search } = req.query;
 
+  // parámetros de paginación
+  const limit = parseInt(req.query.limit) || 100;   // por defecto 20
+  const offset = parseInt(req.query.offset) || 0;  // por defecto 0
+
   try {
-    // Si no llega search, devolvemos todos (si preferís, podés retornar 400)
     const where = {};
+
     if (search) {
       const term = `%${search}%`;
       where[Op.or] = [
@@ -19,13 +22,55 @@ const buscarAlumno = async (req, res) => {
       ];
     }
 
-    const datos = await alumnos.findAll({ where });
-    return res.json(datos);
+    // COUNT TOTAL (sin paginación)
+    const total = await alumnos.count({ where });
+
+    // BUSCAR SOLO EL BLOQUE QUE CORRESPONDE
+    const datos = await alumnos.findAll({
+      where,
+      include: [
+        {
+          model: carreras,
+          as: "carrera",
+          attributes: ["id", "nombre"],
+        },
+        {
+          model: facultades,
+          as: "facultad",
+          attributes: ["id", "nombre"],
+        },
+      ],
+      order: [["id", "ASC"]],
+      limit,
+      offset,
+    });
+
+    // Mapear igual que tu versión original
+    const results = datos.map((a) => ({
+      id: a.id,
+      nombre: a.nombre,
+      apellido: a.apellido,
+      telefono: a.telefono,
+      direccion: a.direccion,
+      dni: a.dni,
+      edad: a.edad,
+      nacionalidad: a.nacionalidad,
+      id_carrera: a.id_carrera,
+      id_facultad: a.id_facultad,
+      carrera: a.carrera ? a.carrera.nombre : null,
+      facultad: a.facultad ? a.facultad.nombre : null,
+    }));
+
+    return res.json({
+      results,
+      total,
+    });
   } catch (error) {
     console.error("buscarAlumno error:", error);
     return res.status(500).json({ error: "Error buscando alumno." });
   }
 };
+
 
 const ingresarAlumno = async (req, res) => {
   try {
@@ -78,23 +123,129 @@ const editarProfesor = async (req, res) => {
     res.status(400).json({ error: "Error al editar profesor" });
   }
 };
-
 const listarMateriasPorCarrera = async (req, res) => {
   const { idCarrera } = req.params;
 
   try {
     const lista = await materias.findAll({ where: { id_carrera: idCarrera } });
-
     if (!lista || lista.length === 0)
       return res.status(404).json({ error: "No hay materias para esta carrera" });
 
     res.json(lista);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error buscando materias" });
   }
 };
+
+const listarAlumnosPorCarrera = async (req, res) => {
+  const { idCarrera } = req.params;
+
+  const limit = parseInt(req.query.limit) || 300;   // por defecto 20
+  const offset = parseInt(req.query.offset) || 0;  // por defecto 0
+
+  try {
+    const lista = await alumnos.findAll({ where: { id_carrera: idCarrera } });
+    if (!lista || lista.length === 0)
+      return res.status(404).json({ error: "No hay alumnos para esta carrera" });
+
+    res.json(lista);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error buscando alumnos" });
+  }
+};
+const listarCarreras = async (req, res) => {
+  try {
+    const lista = await carreras.findAll();
+    res.json(lista);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error buscando carreras" });
+  }
+};
+
+
+const getConejosByAlumno = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const registros = await alumnos_conejos.findAll({
+      where: { alumno_id: id },
+      attributes: ["id", "alumno_id", "conejo_id"],
+      include: [
+        {
+          model: conejos,
+          as: "conejo",
+          attributes: ["id", "placa" ,"raza", "edad"]
+        }
+      ],
+      order: [["id", "ASC"]],
+      raw: false
+    });
+
+    console.log(`[getConejosByAlumno] alumno=${id} registros=${registros.length}`);
+    if (registros.length > 0) {
+      console.log("Ejemplo registro[0]:", registros[0].toJSON ? registros[0].toJSON() : registros[0]);
+    }
+
+    return res.json(registros);
+  } catch (err) {
+    console.error("getConejosByAlumno error:", err);
+    return res.status(500).json({ error: "Error obteniendo conejos del alumno" });
+  }
+};
+
+
+const getNotasExamenesByAlumno = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const notas = await notas_examenes.findAll({
+      where: { id_alumno: id },
+      include: [
+        {
+          model: materias,
+          as: "materia",
+          attributes: ["id", "nombre", "anio", "id_carrera"]
+        }
+      ],
+      order: [
+        ["id_materia", "ASC"],
+        ["tipo", "ASC"]
+      ]
+    });
+
+    res.json(notas);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error obteniendo notas de exámenes" });
+  }
+};
+
+const getNotasMateriasByAlumno = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const notas = await notas_materias.findAll({
+      where: { alumno_id: id },
+      include: [
+        {
+          model: materias,
+          as: "materia",
+          attributes: ["id", "nombre", "anio", "id_carrera"]
+        }
+      ],
+      order: [["materia_id", "ASC"]]
+    });
+
+    res.json(notas);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error obteniendo notas de materias" });
+  }
+};
+
 
 module.exports = {
   buscarAlumno,
@@ -103,4 +254,9 @@ module.exports = {
   ingresarProfesor,
   editarProfesor,
   listarMateriasPorCarrera,
+  getConejosByAlumno,
+  getNotasExamenesByAlumno,
+  getNotasMateriasByAlumno,
+  listarAlumnosPorCarrera,
+  listarCarreras
 };

@@ -2,16 +2,26 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import "./index.css"; // estilos globales
+import "./index.css";
 
 // PÁGINAS
 import Principal from "./pages/principal";
-// import Usuario from "./pages/usuario";  // si después lo agregás
+import AlumnoPage from "./pages/alumno";      // 👈 agregala
+import UtnPage from "./pages/paginaUTN";            // 👈 agregalas
+import UbaPage from "./pages/paginaUBA";
+import UnsamPage from "./pages/paginaUNSAM";
 
 // DEFINICIÓN DE RUTAS
 const router = createBrowserRouter([
   { path: "/", element: <Principal /> },
-  // { path: "/usuario", element: <Usuario /> },
+
+  // 👉 página individual del alumno
+  { path: "/alumno/:id", element: <AlumnoPage /> },
+
+  // 👉 páginas de universidades
+  { path: "/utn", element: <UtnPage /> },
+  { path: "/uba", element: <UbaPage /> },
+  { path: "/unsam", element: <UnsamPage /> },
 ]);
 
 // RENDER

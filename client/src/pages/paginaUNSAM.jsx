@@ -1,0 +1,265 @@
+// UnsamPage.jsx
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../components/header";
+import Footer from "../components/footer";
+import logoUNSAM from "../assets/logoUNSAM.png";
+
+const API_BASE = "http://localhost:3000";
+const ALUMNOS_LIMIT = 100; // límite solicitado
+
+export default function UnsamPage() {
+  const [carreras, setCarreras] = useState([]);
+  const [materiasPorCarrera, setMateriasPorCarrera] = useState({});
+  const [alumnosPorCarrera, setAlumnosPorCarrera] = useState({});
+  const [filtros, setFiltros] = useState({}); // { [carreraId]: { query: '', sort: 'edad'|'alfabetico', dir: 'asc'|'desc' } }
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const resCarreras = await fetch(`${API_BASE}/carreras`);
+        if (!resCarreras.ok) throw new Error("Error cargando carreras");
+        const allCarreras = await resCarreras.json();
+
+        // mostrar sólo carreras con id 3 y 4 y id_facultad = 3
+        const carrerasUNSAM = allCarreras.filter(
+          (c) => c.id_facultad === 3 && (c.id === 3 || c.id === 4)
+        );
+        setCarreras(carrerasUNSAM);
+
+        const materiasData = {};
+        const alumnosData = {};
+        const filtrosData = {};
+
+        for (const c of carrerasUNSAM) {
+          // Materias
+          const resMat = await fetch(`${API_BASE}/carreras/${c.id}/materias`);
+          materiasData[c.id] = resMat.ok ? await resMat.json() : [];
+
+          // Alumnos con límite 100
+          const resAlum = await fetch(
+            `${API_BASE}/carreras/${c.id}/alumnos?limit=${ALUMNOS_LIMIT}`
+          );
+          // asumimos el endpoint devuelve array (o { results: [...] })
+          const payload = resAlum.ok ? await resAlum.json() : [];
+          alumnosData[c.id] = Array.isArray(payload)
+            ? payload.slice(0, ALUMNOS_LIMIT)
+            : (payload.results || []).slice(0, ALUMNOS_LIMIT);
+
+          // init filtros
+          filtrosData[c.id] = { query: "", sort: "edad", dir: "desc" };
+        }
+
+        setMateriasPorCarrera(materiasData);
+        setAlumnosPorCarrera(alumnosData);
+        setFiltros(filtrosData);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setError("Error cargando información de UNSAM");
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  const handleSortToggle = (carreraId, campo) => {
+    setFiltros((prev) => {
+      const cur = prev[carreraId] || { query: "", sort: campo, dir: "desc" };
+      // si el mismo campo, togglear dir; si es distinto, setear campo y dejar desc
+      const nextDir = cur.sort === campo ? (cur.dir === "asc" ? "desc" : "asc") : "desc";
+      return { ...prev, [carreraId]: { ...cur, sort: campo, dir: nextDir } };
+    });
+
+    // ordenar cliente (sin pedir backend)
+    const arr = [...(alumnosPorCarrera[carreraId] || [])];
+    arr.sort((a, b) => {
+      if (campo === "edad") {
+        return (a.edad ?? 0) - (b.edad ?? 0);
+      }
+      // alfabetico por "apellido, nombre"
+      const A = `${a.apellido ?? ""} ${a.nombre ?? ""}`.toLowerCase();
+      const B = `${b.apellido ?? ""} ${b.nombre ?? ""}`.toLowerCase();
+      return A.localeCompare(B);
+    });
+
+    // aplicar dir toggle
+    setAlumnosPorCarrera((prev) => ({
+      ...prev,
+      [carreraId]: (filtros[carreraId]?.sort === campo && filtros[carreraId]?.dir === "asc")
+        ? arr.reverse()
+        : arr,
+    }));
+  };
+
+  const handleSearch = (carreraId, q) => {
+    setFiltros((prev) => ({ ...prev, [carreraId]: { ...(prev[carreraId] || {}), query: q } }));
+  };
+
+  if (loading) return <div style={{ textAlign: "center" }}>Cargando información...</div>;
+  if (error) return <div style={{ textAlign: "center", color: "red" }}>{error}</div>;
+
+  return (
+    <div className="unsam-root">
+      <Header />
+
+      <main className="unsam-main">
+        <div className="unsam-header">
+          <img src={logoUNSAM} alt="UNSAM Logo" className="unsam-logo" />
+          <h1 className="unsam-title">Universidad Nacional de San Martín (UNSAM)</h1>
+        </div>
+
+        {carreras.map((carrera) => {
+          const cfg = filtros[carrera.id] || { query: "", sort: "edad", dir: "desc" };
+          const rawAlumnos = alumnosPorCarrera[carrera.id] || [];
+
+          // aplicar búsqueda local (apellido, nombre, dni) y limitar a 100 por seguridad
+          const q = (cfg.query || "").trim().toLowerCase();
+          const alumnosFiltered = rawAlumnos
+            .filter((a) => {
+              if (!q) return true;
+              const hay = [
+                a.apellido ?? "",
+                a.nombre ?? "",
+                String(a.dni ?? ""),
+              ].join(" ").toLowerCase();
+              return hay.includes(q);
+            })
+            .slice(0, ALUMNOS_LIMIT);
+
+          return (
+            <section className="carrera-card" key={carrera.id}>
+              <div className="carrera-header">
+                <h2 className="carrera-name">{carrera.nombre}</h2>
+
+                <div className="carrera-controls">
+                  <input
+                    className="search-input"
+                    placeholder="Buscar por apellido / nombre / DNI..."
+                    value={cfg.query}
+                    onChange={(e) => handleSearch(carrera.id, e.target.value)}
+                  />
+
+                  <div className="sort-group">
+                    <button
+                      className="btn-sort"
+                      onClick={() => handleSortToggle(carrera.id, "edad")}
+                      title="Ordenar por edad (toggle)"
+                    >
+                      Edad
+                    </button>
+                    <button
+                      className="btn-sort"
+                      onClick={() => handleSortToggle(carrera.id, "alfabetico")}
+                      title="Ordenar alfabéticamente (toggle)"
+                    >
+                      A–Z
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="carrera-body">
+                <div className="materias-block">
+                  <h3 className="small-title">Materias</h3>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(materiasPorCarrera[carrera.id] || []).map((m) => (
+                        <tr key={m.id}>
+                          <td>{m.id}</td>
+                          <td>{m.nombre}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="alumnos-block">
+                  <h3 className="small-title">Alumnos (máx {ALUMNOS_LIMIT})</h3>
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Apellido</th>
+                        <th>DNI</th>
+                        <th>Edad</th>
+                        <th>Nacionalidad</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {alumnosFiltered.map((a) => (
+                        <tr key={a.id} onClick={() => navigate(`/alumno/${a.id}`)} className="clickable">
+                          <td>{a.id}</td>
+                          <td className="link-like">{a.apellido}</td>
+                          <td>{a.dni}</td>
+                          <td>{a.edad ?? "—"}</td>
+                          <td>{a.nacionalidad ?? "—"}</td>
+                        </tr>
+                      ))}
+                      {alumnosFiltered.length === 0 && (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: "center", opacity: 0.7 }}>
+                            No hay alumnos (o la búsqueda no arrojó resultados)
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          );
+        })}
+      </main>
+
+      <Footer />
+
+      {/* Styles compactos incluidos aquí para que puedas pegar y ver el resultado rápido */}
+      <style>{`
+        .unsam-main { padding: 28px; max-width: 1200px; margin: 0 auto; }
+        .unsam-header { text-align: center; margin-bottom: 22px; }
+        .unsam-logo { width: 220px; height: auto; display:block; margin: 0 auto 10px; }
+        .unsam-title { margin: 0; font-size: 1.6rem; color: #1a374d; }
+
+        .carrera-card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 8px 28px rgba(10,30,45,0.06); margin-bottom: 22px; }
+        .carrera-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+        .carrera-name { margin:0; font-size:1.1rem; color:#123244; }
+
+        .carrera-controls { display:flex; gap:10px; align-items:center; }
+        .search-input { padding:8px 12px; border-radius:10px; border:1px solid #dbe8f2; min-width:260px; }
+        .sort-group { display:flex; gap:8px; }
+        .btn-sort { background:#1a374d; color:#fff; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
+        .btn-sort:hover { opacity:0.9; transform:translateY(-1px); }
+
+        .carrera-body { display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-top:16px; }
+        .small-title { margin:0 0 8px 0; font-size:0.95rem; color:#2b4b5f; }
+
+        .table { width:100%; border-collapse:collapse; background:transparent; }
+        .table thead th { text-align:left; padding:10px; font-size:0.9rem; color:#2b4b5f; border-bottom:2px solid #eef6fb; }
+        .table tbody td { padding:10px; border-bottom:1px solid #f2f6f9; font-size:0.95rem; color:#233544; }
+
+        .table-hover tbody tr:nth-child(odd) { background: #fbfdff; }
+        .table-hover tbody tr:hover { background: #eaf4fb; }
+
+        .clickable { cursor:pointer; }
+        .link-like { color:#1765c6; text-decoration:underline; }
+
+        @media (max-width: 900px) {
+          .carrera-body { grid-template-columns: 1fr; }
+          .search-input { min-width: 160px; }
+        }
+      `}</style>
+    </div>
+  );
+}

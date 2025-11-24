@@ -1,0 +1,147 @@
+/* Alumno.css - estilos para la página de alumno */
+
+.alumno-page-root {
+  background: #f6f8fb;
+  min-height: 100vh;
+  color: #223;
+}
+
+/* contenedor principal */
+.alumno-main.container {
+  max-width: 1100px;
+  margin: 26px auto;
+  padding: 18px;
+}
+
+/* back button */
+.back-btn {
+  background: transparent;
+  border: none;
+  color: #1a374d;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 6px 20px rgba(12,24,40,0.06);
+  margin-bottom: 18px;
+}
+
+/* personal card layout */
+.personal-card .personal-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.name {
+  margin: 0;
+  font-size: 1.45rem;
+  color: #0f2b44;
+}
+
+.sub {
+  color: #556;
+  margin-top: 6px;
+  font-size: 0.95rem;
+}
+
+.personal-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  gap: 10px 18px;
+  text-align: right;
+  font-size: 0.95rem;
+  color: #243244;
+}
+
+/* section cards */
+.section-card .section-title {
+  margin: 0 0 10px 0;
+  font-size: 1.05rem;
+  color: #123;
+}
+
+/* table wrapper for overflow */
+.table-wrap {
+  overflow: auto;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  padding: 10px;
+}
+
+/* tablas */
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+  font-family: Inter, Roboto, system-ui, Arial;
+}
+
+.tabla thead th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: #314158;
+  background: linear-gradient(180deg, #f7fafc, #eef6ff);
+  border-bottom: 1px solid #e6eef7;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.tabla tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0f4f8;
+  color: #243244;
+  font-size: 0.95rem;
+}
+
+/* filas */
+.tabla tbody tr { background: transparent; }
+.tabla tbody tr:nth-child(odd) { background: rgba(250,253,255,0.6); }
+
+/* estado badges */
+.estado {
+  padding: 6px 10px;
+  border-radius: 999px;
+  display: inline-block;
+  font-weight: 600;
+  text-transform: capitalize;
+  font-size: 0.9rem;
+}
+
+.estado.aprobada { background: rgba(20,140,80,0.12); color: #148c50; }
+.estado.desaprobada { background: rgba(220,40,40,0.08); color: #c0392b; }
+.estado.promocionada { background: rgba(60,120,200,0.10); color: #186fa0; }
+
+/* small loading */
+.small-loading {
+  padding: 8px 10px;
+  color: #556;
+}
+
+/* muted text */
+.muted { color: #667; padding: 8px 10px; }
+
+/* center messages */
+.center-message {
+  text-align: center;
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  color: #334;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .personal-card .personal-grid { flex-direction: column; text-align: left; }
+  .personal-meta { grid-template-columns: 1fr; text-align: left; }
+  .tabla { min-width: 520px; }
+}

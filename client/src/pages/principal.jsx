@@ -23,15 +23,15 @@ import ubaLogo from "../assets/logoUBA.jpg";
  */
 
 const SOUTH_AMERICA = [
-  "Argentina", "Bolivia", "Brazil", "Brasil", "Chile", "Colombia", "Ecuador",
-  "Guyana", "Paraguay", "Peru", "Perú", "Suriname", "Uruguay", "Venezuela"
+  "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Ecuador",
+  "Paraguay", "Peru", "Uruguay", "Venezuela"
 ];
 
 // Si no tenés endpoint de facultades, ajustá los ids según tu base.
 const DEFAULT_FACULTADES = [
-  { id: 1, nombre: "UNSAM" },
+  { id: 1, nombre: "UTN" },
   { id: 2, nombre: "UBA" },
-  { id: 3, nombre: "UTN" },
+  { id: 3, nombre: "UNSAM" },
 ];
 
 export default function Principal() {
@@ -92,10 +92,12 @@ export default function Principal() {
     async (searchTerm = "") => {
       setLoading(true);
       try {
-        const url = new URL("/alumnos/buscar", window.location.origin);
+        // Usar backend explícito (puedes moverlo a una variable de entorno)
+        const base = "http://localhost:3000";
+        const url = new URL("/alumnos/buscar", base);
         if (searchTerm) url.searchParams.set("search", searchTerm);
 
-        const res = await fetch(url.toString());
+        const res = await fetch(url.toString(), { method: "GET" });
         if (!res.ok) throw new Error("Error fetching alumnos");
         const datos = await res.json();
         setAlumnos(Array.isArray(datos) ? datos : datos.results || []);
@@ -157,11 +159,13 @@ export default function Principal() {
       <Header />
 
       <main className="principal-main">
+        <div className="universidades-row">
+          <CardUniv nombre="UTN" imagen={utnLogo} destino="/utn" />
+          <CardUniv nombre="UBA" imagen={ubaLogo} destino="/uba" />
+          <CardUniv nombre="UNSAM" imagen={unsamLogo} destino="/unsam" />
+        </div>
         <div className="top-controls">
-          <div className="title-area">
-            <h1 className="principal-title">Gestión de Alumnos</h1>
-            <p className="principal-subtitle">Buscá y filtrá alumnos rápidamente</p>
-          </div>
+
 
           <div className="controls-row">
             <Busqueda onSearch={(s) => setQ(s)} />
@@ -248,6 +252,13 @@ export default function Principal() {
           .controls-row { flex-direction: column; align-items: stretch; }
           .dropdowns { justify-content: flex-start; }
         }
+          .universidades-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 22px;
+    margin: 25px 0 10px 0;
+  }
       `}</style>
     </div>
   );

@@ -1,19 +1,24 @@
 const express = require("express");
 const sequelize = require("./config/db");
 
-// Importar controladores
+require("./models"); // inicializa todos los modelos
+
+// Controladores existentes
 const {
   buscarAlumno,
   ingresarAlumno,
   editarAlumno,
   ingresarProfesor,
   editarProfesor,
-  listarMateriasPorCarrera
+  listarMateriasPorCarrera,
+  getConejosByAlumno,
+  getNotasExamenesByAlumno,
+  getNotasMateriasByAlumno,
+  listarAlumnosPorCarrera,
+  listarCarreras
 } = require("./controller/peticionesAlumno");
 
-// Importar modelos (necesario para que sequelize detecte todo)
-require("./models"); // inicializa todos los modelos
-// si necesitás más modelos para relaciones, agrégalos acá
+// Nuevo controlador para alumno (conejos, notas, etc.)
 
 const server = express();
 server.use(express.json());
@@ -25,22 +30,43 @@ server.use((req, res, next) => {
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, PATCH, DELETE, OPTIONS"
   );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   next();
 });
+
+/* ===========================
+         RUTAS ALUMNOS
+   =========================== */
 
 server.get("/alumnos/buscar", buscarAlumno);
 server.post("/alumnos/ingresar", ingresarAlumno);
 server.put("/alumnos/editar/:id", editarAlumno);
 
+/* ===========================
+         RUTAS PROFESORES
+   =========================== */
+
 server.post("/profesores/ingresar", ingresarProfesor);
 server.put("/profesores/editar/:id", editarProfesor);
 
-// Lista materias según carrera
-server.get("/materias/:idCarrera", listarMateriasPorCarrera);
+/* ===========================
+      NUEVAS RUTAS USUARIO
+   =========================== */
+
+server.get("/alumno/:id/conejos", getConejosByAlumno);
+server.get("/alumno/:id/notas-examenes", getNotasExamenesByAlumno);
+server.get("/alumno/:id/notas-materias", getNotasMateriasByAlumno);
+// Materias por carrera
+server.get("/carreras/:idCarrera/materias", listarMateriasPorCarrera);
+
+// Alumnos por carrera
+server.get("/carreras/:idCarrera/alumnos", listarAlumnosPorCarrera);
+
+// Todas las carreras
+server.get("/carreras", listarCarreras);
+/* ===========================
+             SERVER
+   =========================== */
 
 server.listen(3000, "0.0.0.0", async () => {
   try {
