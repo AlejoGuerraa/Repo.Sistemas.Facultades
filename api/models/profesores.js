@@ -12,6 +12,7 @@ module.exports = (sequelize) => {
       titulo: { type: DataTypes.STRING(255), allowNull: true },
 
       id_facultad: { type: DataTypes.INTEGER, allowNull: true },
+      id_materia: { type: DataTypes.INTEGER, allowNull: true },
     },
     {
       tableName: "profesores",

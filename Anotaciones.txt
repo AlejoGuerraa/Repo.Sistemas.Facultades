@@ -20,131 +20,314 @@ Mostrar TABLA completa limitada
 Mostrar notas de un alumno
 
 
+-------------------------------------------
 
+1 - EJECUTAR insertsPesados.sql
+
+EN MYSQL/BIN -> cmd
+mysql -u root -p --local-infile=1
+
+LOAD DATA LOCAL INFILE 'C:\\Users\\Gisse\\Documents\\Trabajos Alejo\\Facultades gh\\Repo.Sistemas.Facultades\\inserts\\conejos.csv'
+INTO TABLE conejos
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n'
+(placa, raza, edad);
+
+LOAD DATA LOCAL INFILE 'C:\\Users\\Gisse\\Documents\\Trabajos Alejo\\Facultades gh\\Repo.Sistemas.Facultades\\inserts\\alumnos.csv'
+INTO TABLE alumnos
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+(id, nombre, apellido, telefono, direccion, dni, edad, nacionalidad, id_facultad, id_carrera);
+
+LOAD DATA LOCAL INFILE 'C:\\Users\\Gisse\\Documents\\Trabajos Alejo\\Facultades gh\\Repo.Sistemas.Facultades\\inserts\\output\\notas_examenes.csv'
+INTO TABLE notas_examenes
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+(id, id_alumno, id_materia, tipo, nota, fecha);
+
+LOAD DATA LOCAL INFILE 'C:\\Users\\Gisse\\Documents\\Trabajos Alejo\\Facultades gh\\Repo.Sistemas.Facultades\\inserts\\output\\alumno_materia.csv'
+INTO TABLE notas_materias
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+(alumno_id, materia_id, estado, promedio, promedio_sin_aplazo);
+
+LOAD DATA LOCAL INFILE 'C:\\Users\\Gisse\\Documents\\Trabajos Alejo\\Facultades gh\\Repo.Sistemas.Facultades\\inserts\\output\\alumnos_conejos.csv'
+INTO TABLE alumnos_conejos
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+(id, alumno_id, conejo_id);
+
+-----------------------------------
+alumnos_conejos
+notas_examenes
+notas_materias
+
+Ahora viene una parte complicada, necesito que me hagas los inserts en un script.js, que lo guarde en un csv.
+Esta vez le toca a "notas_examenes", que es una tabla que almacena estos datos:
+
+id: Es la id de la nota
+id_alumno: La nota de qué alumno
+id_materia: La materia en la que se sacó esa nota.
+tipo: El tipo de examen que es, las opciones son (parcial1,parcial2,final)
+
+Te voy a explicar como funciona esto:
+Un alumno que rinde una carrera, rinde las materias de esa carrera, y en cada materia rendis pruebas, que son 2 parciales a lo largo del cuatrimestre.
+Para aprobar un parcial, te tenes que sacar 4 o mas. Ahora, existe un sistema. si te sacas un promedio de 4-6 entre los 2 parciales, tenes la posibilidad de rendir un examen "final", y si lo aprobas con 4 o mas, aprobas la materia.
+Si en el promedio de los 2 parciales tenes 7 o mas, aprobas la materia directamente, sin necesidad de rendir un final.
+Pero si tenes un promedio menor a 4, reprobas la materia directamente.
+
+Lo que yo quiero lograr en mi tabla, es que se almacenen  todas la notas de los parciales y finales, respetando toda la logica que te acabo de explicar.
+Para un cuatrimestre de un alumno en una materia, podria haber por ejemplo, 3 inserts:
+parcial 1 = 5
+parcial 2 = 4
+final = 5
+Ahi el alumno aprobaria la materia.
+Pero si el alumno desaprueba la materia, es totalmente normal que la vuelva a recursar, es mas, es casi seguro que lo haga, por eso tiene sentido si se repite la combinacion (alumno_id - materia_id).
+
+Cerrando eso, cada vez que el alumno recibe una nota, es decir cada vez que se hace un insert, la escuela le da como regalo un conejo al estudiante, sin importar la nota que se sacó.
+Existe la tabla conejos, que tiene 4 millones de inserts, tu tarea es hacer un insert en alumnos_conejos cada vez que se hace un insert en notas_examenes.
+Tenes que seguir estos criterios:
+Al que se sacó 1, se le da un conejo de edad = 10,
+Al que se sacó 2, uno de edad 9,
+Asi sucesivamente, hasta que el que se sacó 10, tiene un conejo de edad 1, esto sigue la logica de que si el alumno tiene mejor nota, es mas responsable para criar un conejo de menor edad.
+
+Cosas a tener en cuenta:
+- Si un alumno aprobo una materia, no vuelve a tener otra nota en esa materia.
+- Se puede repetir la combinacion id_alumno - id_materia si el alumno reprobo
+- Las materias tienen que tener sentido en base a la id_carrera de cada alumno, no puede rendir materias de economia si está en la carrera de medicina, por ejemplo.
+Para hacer esto podes hacer un select en materias donde la id_carrera del alumno sea igual a id_carrera de la materia.
+- Si un alumno no aprobó todas las materias de primer año, no puede rendir las de 2do, cada materia tiene su año, para verificar eso.
+- Tene en cuenta que hay muchos alumnos que son de 5to, 4to o 3er año, que van a tener un monton de inserts de notas, muchisimas.
+- Tene en cuenta que hay 3496 alumnos, asi que vas a tener que hacer muchisimos inserts, calculale mas de 100 mil.
+- El alumno que esté en mayor año, mas conejos tendrá.
+
+Estos son los modelos de mis tablas:
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const alumnos_conejos = sequelize.define(
+    "alumnos_conejos",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+      alumno_id: { type: DataTypes.INTEGER, allowNull: false },
+      conejo_id: { type: DataTypes.INTEGER, allowNull: false },
+    },
+    {
+      tableName: "alumnos_conejos",
+      timestamps: false,
+    }
+  );
+
+  return alumnos_conejos;
+};
+
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const notas_examenes = sequelize.define(
+    "notas_examenes",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+
+      id_alumno: { type: DataTypes.INTEGER, allowNull: false },
+      id_materia: { type: DataTypes.INTEGER, allowNull: false },
+
+      tipo: {
+        type: DataTypes.ENUM("parcial1", "parcial2", "final"),
+        allowNull: false,
+      },
+
+      nota: { type: DataTypes.DECIMAL(3, 1), allowNull: false },
+
+      fecha: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "notas_examenes",
+      timestamps: false,
+    }
+  );
+
+  return notas_examenes;
+};
+
+Este es el codigo que tenia antes, te podes basar en esto:
+
+def insertar_notas(conn, max_materias_por_alumno=10):
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id, anio, id_carrera FROM materias;")
+    materias = cursor.fetchall()
+    materias_map_by_carrera = {}
+    for mid, anio, id_carr in materias:
+        materias_map_by_carrera.setdefault(id_carr, []).append(mid)
+
+    cursor.execute("SELECT materia_id, correlativa_id FROM correlativas;")
+    corr_rows = cursor.fetchall()
+    corr_map = {}
+    for m, c in corr_rows:
+        corr_map.setdefault(m, []).append(c)
+
+    cursor.execute("SELECT id, id_carrera FROM alumnos;")
+    alumnos = cursor.fetchall()
+
+    inserts = []
+
+    for alumno in alumnos:
+        alumno_id, id_carr = alumno
+        candidate_materias = materias_map_by_carrera.get(id_carr, [])
+        if not candidate_materias:
+            candidate_materias = [m[0] for m in materias]
+
+        num_to_try = min(len(candidate_materias), max(2, random.randint(2, max_materias_por_alumno)))
+        chosen_materias = random.sample(candidate_materias, num_to_try)
+
+        for m_id in chosen_materias:
+            required = corr_map.get(m_id, [])
+            puede_cursar = True
+            for req in required:
+                cursor.execute("SELECT estado FROM alumno_materia WHERE alumno_id=%s AND materia_id=%s;", (alumno_id, req))
+                row = cursor.fetchone()
+                if not row:
+                    if random.random() < 0.10:
+                        cursor.execute("""
+                            INSERT IGNORE INTO alumno_materia 
+                            (alumno_id, materia_id, estado, promedio, promedio_sin_aplazo)
+                            VALUES (%s, %s, %s, %s, %s);
+                        """, (alumno_id, req, 'aprobada', 7.0, 7.0))
+                        conn.commit()
+                    else:
+                        puede_cursar = False
+                        break
+                elif row[0] not in ('aprobada', 'promocionada'):
+                    puede_cursar = False
+                    break
+
+            if not puede_cursar:
+                continue
+
+            # -------- PARCIALES --------
+            p1 = rand_grade()
+            p2 = rand_grade()
+
+            inserts.append((alumno_id, m_id, 'parcial1', p1))
+            inserts.append((alumno_id, m_id, 'parcial2', p2))
+
+            asignar_conejo(conn, alumno_id, p1)
+            asignar_conejo(conn, alumno_id, p2)
+
+            avg = round((p1 + p2) / 2, 1)
+
+            estado = 'desaprobada'
+            promedio = avg
+            promedio_sin_aplazo = avg
+
+            # -------- PROMOCION --------
+            if avg >= 7.0:
+                estado = 'promocionada'
+
+            # -------- FINAL DIRECTO --------
+            elif 4.0 <= avg < 7.0:
+                final = rand_grade()
+                inserts.append((alumno_id, m_id, 'final', final))
+                asignar_conejo(conn, alumno_id, final)
+
+                if final >= 4.0:
+                    estado = 'aprobada'
+                    promedio = round((avg + final) / 2.0, 1)
+                else:
+                    if random.random() < 0.3:
+                        final2 = rand_grade()
+                        inserts.append((alumno_id, m_id, 'final', final2))
+                        asignar_conejo(conn, alumno_id, final2)
+
+                        if final2 >= 4.0:
+                            estado = 'aprobada'
+                            promedio = round((avg + final2) / 2.0, 1)
+
+            # -------- RECUPERA PARCIALES --------
+            elif avg < 4.0:
+                if random.random() < 0.5:
+                    rp1 = rand_grade()
+                    rp2 = rand_grade()
+                    inserts.append((alumno_id, m_id, 'parcial1', rp1))
+                    inserts.append((alumno_id, m_id, 'parcial2', rp2))
+
+                    asignar_conejo(conn, alumno_id, rp1)
+                    asignar_conejo(conn, alumno_id, rp2)
+
+                    avg2 = round((rp1 + rp2) / 2, 1)
+
+                    if avg2 >= 7.0:
+                        estado = 'promocionada'
+                        promedio = avg2
+
+                    elif 4.0 <= avg2 < 7.0:
+                        finalr = rand_grade()
+                        inserts.append((alumno_id, m_id, 'final', finalr))
+                        asignar_conejo(conn, alumno_id, finalr)
+
+                        if finalr >= 4.0:
+                            estado = 'aprobada'
+                            promedio = round((avg2 + finalr) / 2.0, 1)
+                        else:
+                            estado = 'desaprobada'
+                            promedio = round((avg2 + finalr) / 2.0, 1)
+                    else:
+                        estado = 'desaprobada'
+                        promedio = avg2
+                else:
+                    estado = 'desaprobada'
+                    promedio = avg
+
+            cursor.execute("""
+                INSERT INTO alumno_materia (alumno_id, materia_id, estado, promedio, promedio_sin_aplazo)
+                VALUES (%s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    estado = VALUES(estado),
+                    promedio = VALUES(promedio),
+                    promedio_sin_aplazo = VALUES(promedio_sin_aplazo);
+            """, (alumno_id, m_id, estado, promedio, promedio_sin_aplazo))
+            conn.commit()
+
+    if inserts:
+        sql = "INSERT INTO notas (id_alumno, id_materia, tipo, nota) VALUES (%s, %s, %s, %s);"
+        CHUNK = NOTAS_CHUNK if (NOTAS_CHUNK and isinstance(NOTAS_CHUNK, int)) else 500
+        for i in range(0, len(inserts), CHUNK):
+            cursor.executemany(sql, inserts[i:i+CHUNK])
+            conn.commit()
+
+        print(f"✅ Insertadas {len(inserts)} notas (en {max(1, len(inserts)//CHUNK)} chunks)")
+    else:
+        print("⚠️ No se generaron notas.")
+
+    cursor.close()
 
 ---------------------
+1 - 1
+38 - 73
+36 materias = 828 alumnos
 
-necesito que me generes un archivo peticionesAlumno.js que va a ser el que albergue los endpoints de mi pagina, estos son los endpoints que necesito:
+2 - 2
+74 - 120
+47 materias = 1081 alumnos
 
-Buscar alumno por nombre/apellido/dni
-Ingresar alumno
-Editar Alumno
-Ingresar profesor
-editar profesor
-listar materias segun carrera
+3 - 3
+121 - 152
+32 materias = 736
 
-La pagina va a consistir en una tabla tipo excel, donde vos puedas en base a un buscador, encontrar un alumno. Y van a existir
-dropdowns donde el usuario va a poder elegir filtros, que van a ser (facultad(unsam,uba y utn), carrera(economia, contador publico,medicina y ing. en sistemas), materia(son una banda), y los va a poder ordenar por (edad )
+3 - 4
+1 - 37
+37 materias = 851
 
-Entonces, necesito que me hagas los endpoints que se necesiten para todas esas peticiones. Aca te paso todos mis modelos para que sepas que atributos uso.
-
-const { DataTypes } = require("sequelize");
-
-module.exports = (sequelize) => {
-  const alumnos = sequelize.define(
-    "alumnos",
-    {
-      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-
-      nombre: { type: DataTypes.STRING(100), allowNull: false },
-      apellido: { type: DataTypes.STRING(100), allowNull: false },
-
-      telefono: { type: DataTypes.BIGINT, allowNull: false, unique: true },
-      direccion: { type: DataTypes.STRING(255), allowNull: false, unique: true },
-      dni: { type: DataTypes.STRING(15), allowNull: false, unique: true },
-
-      edad: { type: DataTypes.INTEGER, allowNull: false },
-      nacionalidad: { type: DataTypes.STRING(50), allowNull: false },
-
-      id_facultad: { type: DataTypes.INTEGER, allowNull: false },
-      id_carrera: { type: DataTypes.INTEGER, allowNull: false },
-    },
-    {
-      tableName: "alumnos",
-      timestamps: false,
-    }
-  );
-
-  return alumnos;
-};
-
-
-const { DataTypes } = require("sequelize");
-
-module.exports = (sequelize) => {
-  const profesores = sequelize.define(
-    "profesores",
-    {
-      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-
-      nombre: { type: DataTypes.STRING(100), allowNull: false },
-      apellido: { type: DataTypes.STRING(100), allowNull: false },
-
-      titulo: { type: DataTypes.STRING(255), allowNull: true },
-
-      id_facultad: { type: DataTypes.INTEGER, allowNull: true },
-    },
-    {
-      tableName: "profesores",
-      timestamps: false,
-    }
-  );
-
-  return profesores;
-};
-const { DataTypes } = require("sequelize");
-
-module.exports = (sequelize) => {
-  const facultades = sequelize.define(
-    "facultades",
-    {
-      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-      nombre: { type: DataTypes.STRING(200), allowNull: false },
-    },
-    {
-      tableName: "facultades",
-      timestamps: false,
-    }
-  );
-
-  return facultades;
-};
-const { DataTypes } = require("sequelize");
-
-module.exports = (sequelize) => {
-  const materias = sequelize.define(
-    "materias",
-    {
-      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-
-      nombre: { type: DataTypes.STRING(255), allowNull: false },
-      anio: { type: DataTypes.INTEGER, allowNull: false },
-
-      id_carrera: { type: DataTypes.INTEGER, allowNull: false },
-    },
-    {
-      tableName: "materias",
-      timestamps: false,
-    }
-  );
-
-  return materias;
-};
-const { DataTypes } = require("sequelize");
-
-module.exports = (sequelize) => {
-  const Carrera = sequelize.define(
-    "carreras",
-    {
-      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-      nombre: { type: DataTypes.STRING(200), allowNull: false },
-      id_facultad: { type: DataTypes.INTEGER },
-    },
-    {
-      tableName: "carreras",
-      timestamps: false,
-    }
-  );
-
-  return carreras;
-};
+3496 alumnos en total
+----------------------
