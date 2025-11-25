@@ -10,6 +10,9 @@ import AlumnoPage from "./pages/alumno";      // 👈 agregala
 import UtnPage from "./pages/paginaUTN";            // 👈 agregalas
 import UbaPage from "./pages/paginaUBA";
 import UnsamPage from "./pages/paginaUNSAM";
+import EasyMode from "./pages/easyMode";
+import BrainHunter from "./pages/brainHunter";
+import GhostHunter from "./pages/ghostHunter";
 
 // DEFINICIÓN DE RUTAS
 const router = createBrowserRouter([
@@ -22,6 +25,10 @@ const router = createBrowserRouter([
   { path: "/utn", element: <UtnPage /> },
   { path: "/uba", element: <UbaPage /> },
   { path: "/unsam", element: <UnsamPage /> },
+  { path: "/easy", element : <EasyMode/>},
+  { path: "/ghost", element : <GhostHunter/>},
+  { path: "/brain", element : <BrainHunter/>}
+
 ]);
 
 // RENDER

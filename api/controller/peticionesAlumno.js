@@ -246,6 +246,129 @@ const getNotasMateriasByAlumno = async (req, res) => {
   }
 };
 
+// =========================
+// Notas Exámenes
+// =========================
+const getNotasExamenes0a3 = async (req, res) => {
+  try {
+    const notas = await notas_examenes.findAll({
+      where: { nota: { [Op.between]: [0, 3.99] } },
+      include: [
+        { model: alumnos, as: "alumno", attributes: ["id", "nombre", "apellido", "dni"] },
+        { model: materias, as: "materia", attributes: ["id", "nombre", "id_carrera"] },
+      ],
+      order: [[{ model: alumnos, as: "alumno" }, "apellido", "ASC"]],
+    });
+    res.json(notas);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo notas de exámenes 0-3" });
+  }
+};
+
+const getNotasExamenes4a7 = async (req, res) => {
+  try {
+    const notas = await notas_examenes.findAll({
+      where: { nota: { [Op.between]: [4, 7.99] } },
+      include: [
+        { model: alumnos, as: "alumno", attributes: ["id", "nombre", "apellido", "dni"] },
+        { model: materias, as: "materia", attributes: ["id", "nombre", "id_carrera"] },
+      ],
+      order: [[{ model: alumnos, as: "alumno" }, "apellido", "ASC"]],
+    });
+    res.json(notas);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo notas de exámenes 4-7" });
+  }
+};
+
+const getNotasExamenes7a10 = async (req, res) => {
+  try {
+    const notas = await notas_examenes.findAll({
+      where: { nota: { [Op.between]: [7, 10] } },
+      include: [
+        { model: alumnos, as: "alumno", attributes: ["id", "nombre", "apellido", "dni"] },
+        { model: materias, as: "materia", attributes: ["id", "nombre", "id_carrera"] },
+      ],
+      order: [[{ model: alumnos, as: "alumno" }, "apellido", "ASC"]],
+    });
+    res.json(notas);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo notas de exámenes 7-10" });
+  }
+};
+
+// =========================
+// Notas Materias
+// =========================
+const getNotasMaterias0a3 = async (req, res) => {
+  try {
+    const notas = await notas_materias.findAll({
+      where: {
+        [Op.or]: [
+          { promedio: { [Op.between]: [0, 3.99] } },
+          { promedio_sin_aplazo: { [Op.between]: [0, 3.99] } },
+        ],
+      },
+      include: [
+        { model: alumnos, as: "alumno", attributes: ["id", "nombre", "apellido", "dni"] },
+        { model: materias, as: "materia", attributes: ["id", "nombre", "id_carrera"] },
+      ],
+      order: [[{ model: alumnos, as: "alumno" }, "apellido", "ASC"]],
+    });
+    res.json(notas);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo notas materias 0-3" });
+  }
+};
+
+const getNotasMaterias4a7 = async (req, res) => {
+  try {
+    const notas = await notas_materias.findAll({
+      where: {
+        [Op.or]: [
+          { promedio: { [Op.between]: [4, 6.99] } },
+          { promedio_sin_aplazo: { [Op.between]: [4, 6.99] } },
+        ],
+      },
+      include: [
+        { model: alumnos, as: "alumno", attributes: ["id", "nombre", "apellido", "dni"] },
+        { model: materias, as: "materia", attributes: ["id", "nombre", "id_carrera"] },
+      ],
+      order: [[{ model: alumnos, as: "alumno" }, "apellido", "ASC"]],
+    });
+    res.json(notas);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo notas materias 4-7" });
+  }
+};
+
+const getNotasMaterias7a10 = async (req, res) => {
+  try {
+    const notas = await notas_materias.findAll({
+      where: {
+        [Op.or]: [
+          { promedio: { [Op.between]: [7, 10] } },
+          { promedio_sin_aplazo: { [Op.between]: [7, 10] } },
+        ],
+      },
+      include: [
+        { model: alumnos, as: "alumno", attributes: ["id", "nombre", "apellido", "dni"] },
+        { model: materias, as: "materia", attributes: ["id", "nombre", "id_carrera"] },
+      ],
+      order: [[{ model: alumnos, as: "alumno" }, "apellido", "ASC"]],
+    });
+    res.json(notas);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo notas materias 7-10" });
+  }
+};
+
 
 module.exports = {
   buscarAlumno,
@@ -258,5 +381,11 @@ module.exports = {
   getNotasExamenesByAlumno,
   getNotasMateriasByAlumno,
   listarAlumnosPorCarrera,
-  listarCarreras
+  listarCarreras,
+  getNotasExamenes0a3,
+  getNotasExamenes4a7,
+  getNotasExamenes7a10,
+  getNotasMaterias0a3,
+  getNotasMaterias4a7,
+  getNotasMaterias7a10,
 };

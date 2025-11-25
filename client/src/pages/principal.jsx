@@ -1,3 +1,4 @@
+// Principal.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import Header from "../components/header";
 import Footer from "../components/footer";
@@ -5,34 +6,31 @@ import CardUniv from "../components/CardUniv";
 import Busqueda from "../components/Busqueda";
 import AlumnosTable from "../components/AlumnosTable";
 
-import "../pagescss/principal.css"; // si querés mantener estilos globales
+import "../pagescss/principal.css";
 
 // IMPORTAR IMÁGENES DE LOGOS
 import utnLogo from "../assets/logoUTN.jpg";
 import unsamLogo from "../assets/logoUNSAM.png";
 import ubaLogo from "../assets/logoUBA.jpg";
 
-/**
- * Principal.jsx
- *
- * Lógica:
- * - llama a /alumnos/buscar?search=...
- * - intenta cargar /facultades y /carreras (si existen) para mostrar nombres
- * - filtra client-side por facultad y nacionalidad
- * - ordena por edad o alfabéticamente y aplica dirección asc/desc
- */
-
 const SOUTH_AMERICA = [
   "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Ecuador",
   "Paraguay", "Peru", "Uruguay", "Venezuela"
 ];
 
-// Si no tenés endpoint de facultades, ajustá los ids según tu base.
 const DEFAULT_FACULTADES = [
   { id: 1, nombre: "UTN" },
   { id: 2, nombre: "UBA" },
   { id: 3, nombre: "UNSAM" },
 ];
+
+// Mapeo forzado de carreras según id_carrera
+const CARRERAS_FORZADAS = {
+  1: "Ing. Sistemas",
+  2: "Medicina",
+  3: "Economía",
+  4: "Contador",
+};
 
 export default function Principal() {
   const [alumnos, setAlumnos] = useState([]);
@@ -44,8 +42,8 @@ export default function Principal() {
 
   const [selectedFacultad, setSelectedFacultad] = useState("all");
   const [selectedNacionalidad, setSelectedNacionalidad] = useState("all");
-  const [sortField, setSortField] = useState("edad"); // 'edad' | 'alfabetico'
-  const [sortDir, setSortDir] = useState("desc"); // 'asc' | 'desc'
+  const [sortField, setSortField] = useState(""); // sin orden
+  const [sortDir, setSortDir] = useState("desc");
 
   // cargar facultades/carreras si endpoints existen
   useEffect(() => {
@@ -58,12 +56,11 @@ export default function Principal() {
           fList.forEach((f) => (map[f.id] = f.nombre));
           setFacultadesMap(map);
         } else {
-          // fallback default
           const map = {};
           DEFAULT_FACULTADES.forEach((f) => (map[f.id] = f.nombre));
           setFacultadesMap(map);
         }
-      } catch (err) {
+      } catch {
         const map = {};
         DEFAULT_FACULTADES.forEach((f) => (map[f.id] = f.nombre));
         setFacultadesMap(map);
@@ -79,7 +76,7 @@ export default function Principal() {
         } else {
           setCarrerasMap({});
         }
-      } catch (err) {
+      } catch {
         setCarrerasMap({});
       }
     }
@@ -87,20 +84,62 @@ export default function Principal() {
     loadMeta();
   }, []);
 
-  // llamada al backend
   const fetchAlumnos = useCallback(
     async (searchTerm = "") => {
       setLoading(true);
       try {
-        // Usar backend explícito (puedes moverlo a una variable de entorno)
         const base = "http://localhost:3000";
-        const url = new URL("/alumnos/buscar", base);
-        if (searchTerm) url.searchParams.set("search", searchTerm);
+        const PAGE = 200;
+        let offset = 0;
+        let all = [];
+        let total = null;
 
-        const res = await fetch(url.toString(), { method: "GET" });
-        if (!res.ok) throw new Error("Error fetching alumnos");
-        const datos = await res.json();
-        setAlumnos(Array.isArray(datos) ? datos : datos.results || []);
+        while (true) {
+          const url = new URL("/alumnos/buscar", base);
+          if (searchTerm) url.searchParams.set("search", searchTerm);
+          url.searchParams.set("limit", PAGE);
+          url.searchParams.set("offset", offset);
+
+          const res = await fetch(url.toString());
+          if (!res.ok) throw new Error("Error fetching alumnos");
+          const datos = await res.json();
+
+          const page = Array.isArray(datos) ? datos : (datos.results || []);
+          if (total === null) {
+            total = datos?.total ?? null;
+          }
+
+          all = all.concat(page);
+
+          if (page.length < PAGE) break;
+          if (total !== null && all.length >= total) break;
+
+          offset += PAGE;
+          if (offset > 200000) break;
+        }
+
+        // Mapear alumnos
+        const mapped = all.map((a) => {
+          const idCarrera = a.id_carrera ?? a.carreraId ?? null;
+
+          return {
+            id: a.id,
+            nombre: a.nombre,
+            apellido: a.apellido,
+            telefono: a.telefono,
+            direccion: a.direccion,
+            dni: a.dni,
+            edad: a.edad,
+            nacionalidad: a.nacionalidad,
+            id_carrera: idCarrera,
+            id_facultad: a.id_facultad ?? a.facultadId ?? null,
+            // FORZAR nombre de carrera según id_carrera
+            carrera: CARRERAS_FORZADAS[idCarrera] || null,
+            facultad: a.facultad ?? (a.facultad && typeof a.facultad === "object" ? a.facultad.nombre : a.facultad) ?? null,
+          };
+        });
+
+        setAlumnos(mapped);
       } catch (err) {
         console.error("fetchAlumnos error:", err);
         setAlumnos([]);
@@ -111,17 +150,14 @@ export default function Principal() {
     []
   );
 
-  // buscar por query (invocado desde Busqueda)
   useEffect(() => {
     fetchAlumnos(q);
   }, [q, fetchAlumnos]);
 
-  // filtrado y ordenado client-side
   const visibleAlumnos = React.useMemo(() => {
     let arr = [...alumnos];
 
     if (selectedFacultad !== "all") {
-      // selectedFacultad stores the facultad id as string
       const fid = Number(selectedFacultad);
       arr = arr.filter((a) => Number(a.id_facultad) === fid);
     }
@@ -142,8 +178,8 @@ export default function Principal() {
       });
     } else if (sortField === "alfabetico") {
       arr.sort((x, y) => {
-        const aVal = `${x.apellido} ${x.nombre}`.toLowerCase();
-        const bVal = `${y.apellido} ${y.nombre}`.toLowerCase();
+        const aVal = `${x.apellido ?? ""} ${x.nombre ?? ""}`.toLowerCase();
+        const bVal = `${y.apellido ?? ""} ${y.nombre ?? ""}`.toLowerCase();
         if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
         if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
         return 0;
@@ -155,7 +191,6 @@ export default function Principal() {
 
   return (
     <div className="principal-container">
-
       <Header />
 
       <main className="principal-main">
@@ -165,8 +200,6 @@ export default function Principal() {
           <CardUniv nombre="UNSAM" imagen={unsamLogo} destino="/unsam" />
         </div>
         <div className="top-controls">
-
-
           <div className="controls-row">
             <Busqueda onSearch={(s) => setQ(s)} />
 
@@ -179,9 +212,7 @@ export default function Principal() {
                 >
                   <option value="all">Todas</option>
                   {Object.entries(facultadesMap).map(([id, name]) => (
-                    <option key={id} value={id}>
-                      {name}
-                    </option>
+                    <option key={id} value={id}>{name}</option>
                   ))}
                 </select>
               </label>
@@ -194,9 +225,7 @@ export default function Principal() {
                 >
                   <option value="all">Todas</option>
                   {SOUTH_AMERICA.map((pais) => (
-                    <option key={pais} value={pais}>
-                      {pais}
-                    </option>
+                    <option key={pais} value={pais}>{pais}</option>
                   ))}
                 </select>
               </label>
@@ -207,6 +236,7 @@ export default function Principal() {
                   value={sortField}
                   onChange={(e) => setSortField(e.target.value)}
                 >
+                  <option value="">Sin ordenar</option>
                   <option value="edad">Edad</option>
                   <option value="alfabetico">Alfabético</option>
                 </select>
@@ -252,13 +282,13 @@ export default function Principal() {
           .controls-row { flex-direction: column; align-items: stretch; }
           .dropdowns { justify-content: flex-start; }
         }
-          .universidades-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 22px;
-    margin: 25px 0 10px 0;
-  }
+        .universidades-row {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 22px;
+          margin: 25px 0 10px 0;
+        }
       `}</style>
     </div>
   );

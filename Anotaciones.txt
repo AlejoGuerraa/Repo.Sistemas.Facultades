@@ -27,39 +27,40 @@ Mostrar notas de un alumno
 EN MYSQL/BIN -> cmd
 mysql -u root -p --local-infile=1
 
-LOAD DATA LOCAL INFILE 'C:\\Users\\Gisse\\Documents\\Trabajos Alejo\\Facultades gh\\Repo.Sistemas.Facultades\\inserts\\conejos.csv'
+LOAD DATA LOCAL INFILE 'C:\\Rescate\\RepoSistemaFacultades\\Repo.Sistemas.Facultades\\inserts\\conejos.csv'
 INTO TABLE conejos
 FIELDS TERMINATED BY ','
-ENCLOSED BY '"' 
-LINES TERMINATED BY '\n'
+ENCLOSED BY '"'
+LINES TERMINATED BY '\r\n'
 (placa, raza, edad);
 
-LOAD DATA LOCAL INFILE 'C:\\Users\\Gisse\\Documents\\Trabajos Alejo\\Facultades gh\\Repo.Sistemas.Facultades\\inserts\\alumnos.csv'
+LOAD DATA LOCAL INFILE 'C:\\Rescate\\RepoSistemaFacultades\\Repo.Sistemas.Facultades\\inserts\\alumnos.csv'
 INTO TABLE alumnos
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
 (id, nombre, apellido, telefono, direccion, dni, edad, nacionalidad, id_facultad, id_carrera);
 
-LOAD DATA LOCAL INFILE 'C:\\Users\\Gisse\\Documents\\Trabajos Alejo\\Facultades gh\\Repo.Sistemas.Facultades\\inserts\\output\\notas_examenes.csv'
+LOAD DATA LOCAL INFILE 'C:\\Rescate\\RepoSistemaFacultades\\Repo.Sistemas.Facultades\\inserts\\output\\notas_examenes.csv'
 INTO TABLE notas_examenes
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
 (id, id_alumno, id_materia, tipo, nota, fecha);
 
-LOAD DATA LOCAL INFILE 'C:\\Users\\Gisse\\Documents\\Trabajos Alejo\\Facultades gh\\Repo.Sistemas.Facultades\\inserts\\output\\alumno_materia.csv'
+LOAD DATA LOCAL INFILE 'C:\\Rescate\\RepoSistemaFacultades\\Repo.Sistemas.Facultades\\inserts\\output\\alumno_materia.csv'
 INTO TABLE notas_materias
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
 (alumno_id, materia_id, estado, promedio, promedio_sin_aplazo);
 
-LOAD DATA LOCAL INFILE 'C:\\Users\\Gisse\\Documents\\Trabajos Alejo\\Facultades gh\\Repo.Sistemas.Facultades\\inserts\\output\\alumnos_conejos.csv'
+LOAD DATA LOCAL INFILE 'C:\\Rescate\\RepoSistemaFacultades\\Repo.Sistemas.Facultades\\inserts\\output\\alumnos_conejos.csv'
 INTO TABLE alumnos_conejos
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
+IGNORE 1 ROWS
 (id, alumno_id, conejo_id);
 
 -----------------------------------

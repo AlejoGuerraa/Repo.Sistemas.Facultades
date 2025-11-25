@@ -1,3 +1,4 @@
+// index.js
 const express = require("express");
 const sequelize = require("./config/db");
 
@@ -15,10 +16,14 @@ const {
   getNotasExamenesByAlumno,
   getNotasMateriasByAlumno,
   listarAlumnosPorCarrera,
-  listarCarreras
+  listarCarreras,
+  getNotasExamenes0a3,
+  getNotasExamenes4a7,
+  getNotasExamenes7a10,
+  getNotasMaterias0a3,
+  getNotasMaterias4a7,
+  getNotasMaterias7a10,
 } = require("./controller/peticionesAlumno");
-
-// Nuevo controlador para alumno (conejos, notas, etc.)
 
 const server = express();
 server.use(express.json());
@@ -53,9 +58,13 @@ server.put("/profesores/editar/:id", editarProfesor);
       NUEVAS RUTAS USUARIO
    =========================== */
 
+// Conejos
 server.get("/alumno/:id/conejos", getConejosByAlumno);
+
+// Notas de un alumno
 server.get("/alumno/:id/notas-examenes", getNotasExamenesByAlumno);
 server.get("/alumno/:id/notas-materias", getNotasMateriasByAlumno);
+
 // Materias por carrera
 server.get("/carreras/:idCarrera/materias", listarMateriasPorCarrera);
 
@@ -64,6 +73,19 @@ server.get("/carreras/:idCarrera/alumnos", listarAlumnosPorCarrera);
 
 // Todas las carreras
 server.get("/carreras", listarCarreras);
+
+/* ===========================
+      NUEVAS RUTAS EASY MODE
+   =========================== */
+
+server.get("/notas-examenes/0-3", getNotasExamenes0a3);
+server.get("/notas-examenes/4-7", getNotasExamenes4a7);
+server.get("/notas-examenes/7-10", getNotasExamenes7a10);
+
+server.get("/notas-materias/0-3", getNotasMaterias0a3);
+server.get("/notas-materias/4-7", getNotasMaterias4a7);
+server.get("/notas-materias/7-10", getNotasMaterias7a10);
+
 /* ===========================
              SERVER
    =========================== */

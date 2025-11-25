@@ -12,19 +12,30 @@ export default function Header() {
   return (
     <header className="header-container">
       <div className="header-left" onClick={() => navigate("/")}>
-        
         {/* LOGO CIRCULAR */}
         <img src={logo} alt="Logo" className="header-logo" />
-
-        <span className="app-title">
-          Sistema Facultades
-        </span>
+        <span className="app-title">Sistema Facultades</span>
       </div>
 
       <div className="header-right">
-        <Ghost className="icon" />
-        <Brain className="icon" />
-        <Smile className="icon" />
+        {/* Íconos con navegación */}
+        
+        <Smile
+          className="icon"
+          onClick={() => navigate("/easy")}
+          title="Easy mode"
+        />
+        <Ghost
+          className="icon"
+          onClick={() => navigate("/ghost")}
+          title="Ghost Hunter"
+        />
+        <Brain
+          className="icon"
+          onClick={() => navigate("/brain")}
+          title="Brain Hunter"
+        />
+        
       </div>
     </header>
   );
